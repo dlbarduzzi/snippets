@@ -6,17 +6,26 @@
     "dev": "tsx watch src/serve.ts",
     "build": "tsc",
     "start": "node dist/serve.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage.enabled=true",
+    "test:coverage:html": "vitest run --coverage"
   },
   "dependencies": {
     "@hono/node-server": "^1.18.1",
-    "hono": "^4.9.0"
+    "dotenv": "^17.2.1",
+    "dotenv-expand": "^12.0.2",
+    "hono": "^4.9.0",
+    "winston": "^3.17.0",
+    "zod": "^4.0.15"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.0",
     "@types/node": "^20.11.17",
+    "@vitest/coverage-istanbul": "^3.2.4",
     "eslint-plugin-format": "^1.0.1",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
