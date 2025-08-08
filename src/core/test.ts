@@ -1,0 +1,15 @@
+import type { AppConfig } from "./types"
+
+import { logger } from "@/tools/logger"
+import { bootstrap, newApp } from "@/core/app"
+
+function newTestConfig(): AppConfig {
+  return { logger, user: "Brian Smith" }
+}
+
+const testApp = newApp()
+const testConfig = newTestConfig()
+
+bootstrap(testApp, testConfig)
+
+export { testApp }

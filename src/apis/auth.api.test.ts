@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { newTestConfig } from "@/core/config"
-import { bootstrap, newApp } from "@/core/app"
-
+import { testApp } from "@/core/test"
 import { authRoutes } from "./auth.api"
-
-const testApp = newApp()
-const testConfig = newTestConfig()
-
-bootstrap(testApp, testConfig)
 
 testApp.route("/", authRoutes)
 
