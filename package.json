@@ -1,17 +1,21 @@
 {
   "name": "snippets",
   "type": "module",
+  "version": "0.1.0",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/serve.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/serve.js",
+    "lint": "eslint"
   },
   "dependencies": {
     "@hono/node-server": "^1.18.1",
     "hono": "^4.9.0"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^5.2.0",
     "@types/node": "^20.11.17",
+    "eslint-plugin-format": "^1.0.1",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
