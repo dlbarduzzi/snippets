@@ -59,7 +59,21 @@ function internalServerError() {
 }
 
 function invalidRequestError() {
-  return badRequestError("Invalid JSON request")
+  return badRequestError("Invalid JSON request.")
+}
+
+function invalidPayloadError<T>(error: T) {
+  const message = "Invalid JSON payload."
+
+  const statusCode = http.StatusBadRequest
+  const statusText = http.StatusText(statusCode)
+
+  return newApiError({
+    message,
+    statusCode,
+    statusText,
+    errorDetails: { details: error },
+  })
 }
 
 type SanitizedError = {
@@ -119,6 +133,7 @@ class SafeErrorLogger {
 export {
   badRequestError,
   internalServerError,
+  invalidPayloadError,
   invalidRequestError,
   notFoundError,
   SafeErrorLogger,

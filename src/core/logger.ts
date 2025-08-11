@@ -25,7 +25,7 @@ const logger = {
     baseLogger.info(message, { status, ...options })
   },
   infoSimple: (message: string, options?: Options) => {
-    baseLogger.info(message, { status, ...options })
+    baseLogger.info(message, { ...options })
   },
   warn: (status: Status, message: string, options?: Options) => {
     baseLogger.warn(message, { status, ...options })

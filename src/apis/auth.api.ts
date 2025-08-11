@@ -1,11 +1,16 @@
+import z from "zod"
+
 import { http } from "@/tools/http"
 import { newApp } from "@/core/app"
 
 import {
   internalServerError,
+  invalidPayloadError,
   invalidRequestError,
   SafeErrorLogger,
 } from "@/core/error"
+
+import { registerSchema } from "./auth.schema"
 
 const app = newApp()
 
@@ -28,7 +33,11 @@ app.post("/register", async ctx => {
     return internalServerError()
   }
 
-  console.warn(input)
+  const parsed = registerSchema.safeParse(input)
+
+  if (!parsed.success) {
+    return invalidPayloadError(z.treeifyError(parsed.error).properties)
+  }
 
   const status = http.StatusCreated
 
