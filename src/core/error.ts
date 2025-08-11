@@ -49,6 +49,17 @@ function notFoundError() {
   return newApiError({ message, statusCode, statusText })
 }
 
+function unprocessableEntityError(message?: string) {
+  if (message) {
+    message = toSentence(message.trim())
+  }
+
+  const statusCode = http.StatusUnprocessableEntity
+  const statusText = http.StatusText(statusCode)
+
+  return newApiError({ message, statusCode, statusText })
+}
+
 function internalServerError() {
   const message = toSentence("Something went wrong while processing your request.")
 
@@ -137,4 +148,5 @@ export {
   invalidRequestError,
   notFoundError,
   SafeErrorLogger,
+  unprocessableEntityError,
 }

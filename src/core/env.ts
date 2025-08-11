@@ -10,6 +10,7 @@ const schema = z.object({
   APP_URL: z.url(),
   APP_PORT: z.coerce.number().int().positive(),
   IS_LOG_STACK_ALLOWED: z.enum(["true", "false"]).transform(value => value === "true"),
+  DATABASE_URL: z.url(),
 })
 
 // eslint-disable-next-line node/no-process-env

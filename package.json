@@ -9,13 +9,22 @@
     "lint": "eslint",
     "test": "vitest",
     "test:coverage": "vitest --coverage.enabled=true",
-    "test:coverage:html": "vitest run --coverage"
+    "test:coverage:html": "vitest run --coverage",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "@hono/node-server": "^1.18.1",
+    "@noble/hashes": "^1.8.0",
     "dotenv": "^17.2.1",
     "dotenv-expand": "^12.0.2",
+    "drizzle-orm": "^0.44.4",
+    "drizzle-zod": "^0.8.3",
     "hono": "^4.9.0",
+    "postgres": "^3.4.7",
+    "uncrypto": "^0.1.3",
     "winston": "^3.17.0",
     "zod": "^4.0.15"
   },
@@ -23,6 +32,7 @@
     "@antfu/eslint-config": "^5.2.0",
     "@types/node": "^20.11.17",
     "@vitest/coverage-istanbul": "^3.2.4",
+    "drizzle-kit": "^0.31.4",
     "eslint-plugin-format": "^1.0.1",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",

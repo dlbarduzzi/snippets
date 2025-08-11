@@ -1,3 +1,5 @@
+import type { UserSchema } from "@/db/schemas"
+
 import z from "zod"
 
 import { http } from "@/tools/http"
@@ -8,6 +10,7 @@ import {
   invalidPayloadError,
   invalidRequestError,
   SafeErrorLogger,
+  unprocessableEntityError,
 } from "@/core/error"
 
 import { registerSchema } from "./auth.schema"
@@ -28,6 +31,7 @@ app.post("/register", async ctx => {
     SafeErrorLogger.log(error, "failed to parse json request body", {
       logger: ctx.var.config.logger,
       status: "AUTH_REGISTER_ERROR",
+      includeStack: true,
     })
 
     return internalServerError()
@@ -39,10 +43,41 @@ app.post("/register", async ctx => {
     return invalidPayloadError(z.treeifyError(parsed.error).properties)
   }
 
+  let user: UserSchema | undefined
+
+  try {
+    user = await ctx.var.config.models.user.findUserByEmail(parsed.data.email)
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to find user by email failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_REGISTER_ERROR",
+    })
+    return internalServerError()
+  }
+
+  if (user != null) {
+    return unprocessableEntityError("This email is already registered.")
+  }
+
+  const { email, password } = parsed.data
+
+  try {
+    user = await ctx.var.config.models.auth.register(email, password)
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to register user failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_REGISTER_ERROR",
+    })
+    return internalServerError()
+  }
+
   const status = http.StatusCreated
 
   return ctx.json(
     {
+      user,
       status: http.StatusText(status),
       message: "User registered successfully.",
     },
