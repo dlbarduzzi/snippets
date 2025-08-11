@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from "hono"
 
-import { newLogger } from "@/tools/logger"
 import { env } from "./env"
+import { newLogger } from "@/tools/logger"
 
 type Status =
   | "REQUEST_DETAILS"
@@ -22,6 +22,9 @@ const logger = {
     baseLogger.debug(message, { status, ...options })
   },
   info: (status: Status, message: string, options?: Options) => {
+    baseLogger.info(message, { status, ...options })
+  },
+  infoSimple: (message: string, options?: Options) => {
     baseLogger.info(message, { status, ...options })
   },
   warn: (status: Status, message: string, options?: Options) => {

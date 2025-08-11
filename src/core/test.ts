@@ -1,6 +1,6 @@
 import type { AppConfig } from "./types"
 
-import { logger } from "@/tools/logger"
+import { logger } from "./logger"
 import { bootstrap, newApp } from "@/core/app"
 
 function newTestConfig(): AppConfig {
