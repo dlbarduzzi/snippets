@@ -65,6 +65,7 @@ jobs:
       APP_PORT: "3000"
       IS_LOG_STACK_ALLOWED: "false"
       DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db"
+      SNIPPETS_SECRET: testSecret123456789
 
     steps:
       - name: Checkout
