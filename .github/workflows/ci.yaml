@@ -66,6 +66,8 @@ jobs:
       IS_LOG_STACK_ALLOWED: "false"
       DATABASE_URL: "postgresql://test_user:test_pass@localhost:5432/test_db"
       SNIPPETS_SECRET: testSecret123456789
+      RESEND_API_KEY: testResendSecret123456789
+      APP_EMAIL_ONBOARDING: onboarding@company.com
 
     steps:
       - name: Checkout
