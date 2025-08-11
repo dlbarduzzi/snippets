@@ -8,6 +8,8 @@ import { UserModel } from "@/apis/user.model"
 
 import { sendEmailVerification } from "@/mail/email-verification"
 
+const APP_NAME = "Snippets"
+
 function newConfig(): AppConfig {
   return {
     logger,
@@ -21,4 +23,4 @@ function newConfig(): AppConfig {
   }
 }
 
-export { newConfig }
+export { APP_NAME, newConfig }
