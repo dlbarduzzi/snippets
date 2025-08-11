@@ -1,8 +1,7 @@
 import type { Hono } from "hono"
-import type { Logger } from "winston"
+import type { Logger } from "./logger"
 
 type AppConfig = {
-  user: string
   logger: Logger
 }
 

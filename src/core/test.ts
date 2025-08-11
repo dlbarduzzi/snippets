@@ -4,7 +4,7 @@ import { logger } from "@/tools/logger"
 import { bootstrap, newApp } from "@/core/app"
 
 function newTestConfig(): AppConfig {
-  return { logger, user: "Brian Smith" }
+  return { logger }
 }
 
 const testApp = newApp()

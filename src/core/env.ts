@@ -9,6 +9,7 @@ const schema = z.object({
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "silent"]).default("info"),
   APP_URL: z.url(),
   APP_PORT: z.coerce.number().int().positive(),
+  IS_LOG_STACK_ALLOWED: z.enum(["true", "false"]).transform(value => value === "true"),
 })
 
 // eslint-disable-next-line node/no-process-env

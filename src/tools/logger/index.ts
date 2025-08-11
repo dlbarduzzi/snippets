@@ -1,15 +1,16 @@
-import { env } from "@/core/env"
 import { createLogger, format, transports } from "winston"
 
-const logger = createLogger({
-  level: env.LOG_LEVEL,
-  format: format.combine(
-    format.timestamp(),
-    format.json(),
-    format.colorize({ all: env.NODE_ENV === "development" }),
-  ),
-  silent: env.NODE_ENV === "test" || env.LOG_LEVEL === "silent",
-  transports: [new transports.Console()],
-})
+function newLogger(level: string, isDev: boolean) {
+  return createLogger({
+    level,
+    format: format.combine(
+      format.timestamp(),
+      format.json(),
+      format.colorize({ all: isDev }),
+    ),
+    silent: level === "silent",
+    transports: [new transports.Console()],
+  })
+}
 
-export { logger }
+export { newLogger }

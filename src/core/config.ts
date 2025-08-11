@@ -1,9 +1,9 @@
 import type { AppConfig } from "./types"
 
-import { logger } from "@/tools/logger"
+import { logger } from "./logger"
 
 function newConfig(): AppConfig {
-  return { logger, user: "Jane Cooper" }
+  return { logger }
 }
 
 export { newConfig }
