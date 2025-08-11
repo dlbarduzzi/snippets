@@ -74,5 +74,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Start docker containers
+        run: |
+          docker compose up -d
+          # Wait for services to be ready (optional)
+          sleep 10
+
+      - name: Push database schemas
+        run: npm run db:push
+
       - name: Test
         run: npm test
+
+      - name: Stop docker containers
+        run: docker compose down
