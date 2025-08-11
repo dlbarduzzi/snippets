@@ -85,10 +85,10 @@ jobs:
         run: |
           docker compose up -d
           # Wait for services to be ready (optional)
-          sleep 10
+          sleep 5
 
-      - name: Push database schemas
-        run: npm run db:push
+      - name: Migrate database schemas
+        run: npm run db:migrate
 
       - name: Test
         run: npm test
