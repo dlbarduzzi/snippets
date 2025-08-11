@@ -14,6 +14,11 @@ function newTestConfig(): AppConfig {
       user: new UserModel(db),
       auth: new AuthModel(db),
     },
+    mail: {
+      sendEmailVerification: async (_email: string, _token: string) => {
+        // Mocking sendEmailVerification function for testing.
+      },
+    },
   }
 }
 

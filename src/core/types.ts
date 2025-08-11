@@ -9,6 +9,9 @@ type AppConfig = {
     user: UserModel
     auth: AuthModel
   }
+  mail: {
+    sendEmailVerification: (email: string, token: string) => Promise<void>
+  }
 }
 
 type AppEnv = {

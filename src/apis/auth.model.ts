@@ -1,7 +1,7 @@
 import type { DB } from "@/db/connect"
 
 import { lowercase } from "@/tools/strings"
-import { hashPassword } from "@/tools/security/password"
+import { hashPassword } from "@/tools/crypto/password"
 
 import { users, passwords } from "@/db/schemas"
 

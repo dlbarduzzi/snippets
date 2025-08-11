@@ -2,6 +2,8 @@ import type { UserSchema } from "@/db/schemas"
 
 import z from "zod"
 
+import { env } from "@/core/env"
+import { jwt } from "@/core/security"
 import { http } from "@/tools/http"
 import { newApp } from "@/core/app"
 
@@ -16,6 +18,13 @@ import {
 import { registerSchema } from "./auth.schema"
 
 const app = newApp()
+
+app.get("/test", async ctx => {
+  const email = "me@email.com"
+  const token = await jwt(env.SNIPPETS_SECRET).sign({ email }, 900)
+  ctx.var.config.mail.sendEmailVerification(email, token)
+  return ctx.json({ token }, http.StatusOk)
+})
 
 app.post("/register", async ctx => {
   let input: unknown
@@ -72,6 +81,9 @@ app.post("/register", async ctx => {
     })
     return internalServerError()
   }
+
+  const token = await jwt(env.SNIPPETS_SECRET).sign({ email: user.email }, 900)
+  ctx.var.config.mail.sendEmailVerification(user.email, token)
 
   const status = http.StatusCreated
 

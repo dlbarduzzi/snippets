@@ -6,12 +6,17 @@ import { logger } from "./logger"
 import { AuthModel } from "@/apis/auth.model"
 import { UserModel } from "@/apis/user.model"
 
+import { sendEmailVerification } from "@/mail/email-verification"
+
 function newConfig(): AppConfig {
   return {
     logger,
     models: {
       user: new UserModel(db),
       auth: new AuthModel(db),
+    },
+    mail: {
+      sendEmailVerification,
     },
   }
 }
