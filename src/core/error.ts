@@ -49,6 +49,17 @@ function notFoundError() {
   return newApiError({ message, statusCode, statusText })
 }
 
+function unauthorizedError(message?: string) {
+  if (message) {
+    message = toSentence(message.trim())
+  }
+
+  const statusCode = http.StatusUnauthorized
+  const statusText = http.StatusText(statusCode)
+
+  return newApiError({ message, statusCode, statusText })
+}
+
 function unprocessableEntityError(message?: string) {
   if (message) {
     message = toSentence(message.trim())
@@ -148,5 +159,6 @@ export {
   invalidRequestError,
   notFoundError,
   SafeErrorLogger,
+  unauthorizedError,
   unprocessableEntityError,
 }

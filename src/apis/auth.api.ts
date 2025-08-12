@@ -1,6 +1,10 @@
 import type { UserSchema } from "@/db/schemas"
+import type { JWTVerifyResult, JWTPayload } from "jose"
 
 import z from "zod"
+
+import { jwtVerify } from "jose"
+import { JWTExpired } from "jose/errors"
 
 import { env } from "@/core/env"
 import { jwt } from "@/core/security"
@@ -12,6 +16,7 @@ import {
   invalidPayloadError,
   invalidRequestError,
   SafeErrorLogger,
+  unauthorizedError,
   unprocessableEntityError,
 } from "@/core/error"
 
@@ -92,6 +97,79 @@ app.post("/register", async ctx => {
       user,
       status: http.StatusText(status),
       message: "User registered successfully.",
+    },
+    status,
+  )
+})
+
+app.get("/email-verification", async ctx => {
+  const token = ctx.req.query("token")
+  if (!token) {
+    return unauthorizedError("Token is missing.")
+  }
+
+  let jwt: JWTVerifyResult<JWTPayload>
+
+  try {
+    jwt = await jwtVerify(
+      token,
+      new TextEncoder().encode(env.SNIPPETS_SECRET),
+      {
+        algorithms: ["HS256"],
+      },
+    )
+  }
+  catch (error) {
+    if (error instanceof JWTExpired) {
+      return unauthorizedError("Token is expired.")
+    }
+    else {
+      return unauthorizedError("Token is invalid.")
+    }
+  }
+
+  const schema = z.object({ email: z.email() })
+  const parsed = schema.safeParse(jwt.payload)
+
+  if (!parsed.success) {
+    return unauthorizedError("Token has invalid JWT payload.")
+  }
+
+  let user: UserSchema | undefined
+
+  try {
+    user = await ctx.var.config.models.user.findUserByEmail(parsed.data.email)
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to find user by email failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_EMAIL_VERIFICATION_ERROR",
+    })
+    return internalServerError()
+  }
+
+  if (user == null) {
+    return unauthorizedError("User with this email was not found.")
+  }
+
+  try {
+    user = await ctx.var.config.models.user.verifyUserEmail(user.email)
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to verify user email failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_EMAIL_VERIFICATION_ERROR",
+    })
+    return internalServerError()
+  }
+
+  const status = http.StatusOk
+
+  return ctx.json(
+    {
+      user,
+      status: http.StatusText(status),
+      message: "Email verified successfully! You can login now.",
     },
     status,
   )

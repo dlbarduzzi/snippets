@@ -79,7 +79,7 @@ describe("auth register api", () => {
     const status = http.StatusCreated
     expect(res.status).toBe(status)
     expect(await res.json()).toMatchObject({
-      user: { email },
+      user: { email, isEmailVerified: false },
       status: http.StatusText(status),
       message: "User registered successfully.",
     })
