@@ -13,6 +13,8 @@ import { authRoutes } from "./auth.api"
 
 testApp.route("/", authRoutes)
 
+const jsonHeaders = new Headers({ "Content-Type": "application/json" })
+
 describe("auth register api", () => {
   const randomString = generateRandomString(8, "a-z")
 
@@ -22,8 +24,6 @@ describe("auth register api", () => {
   afterAll(async () => {
     await db.delete(users).where(eq(users.email, email))
   })
-
-  const jsonHeaders = new Headers({ "Content-Type": "application/json" })
 
   it("post /register should fail with invalid json request", async () => {
     const res = await testApp.request("/register", {
@@ -96,6 +96,36 @@ describe("auth register api", () => {
     expect(await res.json()).toEqual({
       status: http.StatusText(status),
       message: "This email is already registered.",
+    })
+  })
+})
+
+describe("auth verify email api", () => {
+  it("get /email-verification should fail with missing token", async () => {
+    const res = await testApp.request("/email-verification", {
+      method: "GET",
+      headers: { ...jsonHeaders },
+    })
+    const status = http.StatusUnauthorized
+    expect(res.status).toBe(status)
+    expect(await res.json()).toEqual({
+      status: http.StatusText(status),
+      message: "Token is missing.",
+    })
+  })
+
+  it("get /email-verification should fail with invalid token", async () => {
+    const params = new URLSearchParams()
+    params.append("token", "invalid")
+    const res = await testApp.request(`/email-verification?${params.toString()}`, {
+      method: "GET",
+      headers: { ...jsonHeaders },
+    })
+    const status = http.StatusUnauthorized
+    expect(res.status).toBe(status)
+    expect(await res.json()).toEqual({
+      status: http.StatusText(status),
+      message: "Token is invalid.",
     })
   })
 })

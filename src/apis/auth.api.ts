@@ -24,13 +24,6 @@ import { registerSchema } from "./auth.schema"
 
 const app = newApp()
 
-app.get("/test", async ctx => {
-  const email = "dlbarduzzi@gmail.com"
-  const token = await jwt(env.SNIPPETS_SECRET).sign({ email }, 900)
-  ctx.var.config.mail.sendEmailVerification(email, token)
-  return ctx.json({ token }, http.StatusOk)
-})
-
 app.post("/register", async ctx => {
   let input: unknown
 
