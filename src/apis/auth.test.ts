@@ -1,22 +1,25 @@
-import { execSync } from "node:child_process"
-import { beforeAll, describe, expect, it } from "vitest"
+import { afterAll, describe, expect, it } from "vitest"
+
+import { eq } from "drizzle-orm"
 
 import { http } from "@/tools/http"
 import { testApp } from "@/core/test"
+import { generateRandomString } from "@/core/security"
 
-import { authRoutes } from "./auth.api"
 import { db } from "@/db/connect"
 import { users } from "@/db/schemas"
-import { eq } from "drizzle-orm"
+
+import { authRoutes } from "./auth.api"
 
 testApp.route("/", authRoutes)
 
 describe("auth register api", () => {
-  const email = "test@email.com"
+  const randomString = generateRandomString(8, "a-z")
+
+  const email = `test.${randomString}@email.com`
   const password = "testPassword@123"
 
-  beforeAll(async () => {
-    execSync("npx drizzle-kit push")
+  afterAll(async () => {
     await db.delete(users).where(eq(users.email, email))
   })
 
@@ -75,14 +78,11 @@ describe("auth register api", () => {
     })
     const status = http.StatusCreated
     expect(res.status).toBe(status)
-
-    const response = await res.json()
-    expect(response.status).toBe(http.StatusText(status))
-    expect(response.message).toBe("User registered successfully.")
-
-    expect(response).toHaveProperty("user")
-    expect(response.user).toHaveProperty("email")
-    expect(response.user.email).toBe(email)
+    expect(await res.json()).toMatchObject({
+      user: { email },
+      status: http.StatusText(status),
+      message: "User registered successfully.",
+    })
   })
 
   it("post /register should fail with email already registered", async () => {

@@ -1,8 +1,11 @@
 import type { JWTPayload } from "jose"
 
 import { SignJWT } from "jose"
+import { randomStringGenerator } from "@/tools/crypto/random"
 
-export function jwt(secret: string) {
+const generateRandomString = randomStringGenerator("a-z", "A-Z", "0-9", "-_")
+
+function jwt(secret: string) {
   const jwtAlgorithm = "HS256"
   const encodedSecret = new TextEncoder().encode(secret)
   return {
@@ -16,3 +19,5 @@ export function jwt(secret: string) {
     },
   }
 }
+
+export { generateRandomString, jwt }
