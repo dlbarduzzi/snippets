@@ -11,6 +11,7 @@ type StatusError =
   | "GLOBAL_ERROR"
   | "AUTH_REGISTER_ERROR"
   | "AUTH_EMAIL_VERIFICATION_ERROR"
+  | "SEND_EMAIL_VERIFICATION_ERROR"
 
 type Options = { [key: string]: unknown }
 

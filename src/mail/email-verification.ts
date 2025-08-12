@@ -21,7 +21,7 @@ async function sendEmailVerification(email: string, token: string) {
 
   if (result.error) {
     logger.error(
-      "EMAIL_VERIFICATION_ERROR",
+      "SEND_EMAIL_VERIFICATION_ERROR",
       `send email verification failed after ${result.attempt} attempt(s)`,
       {
         error: result.error,
