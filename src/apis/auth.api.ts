@@ -8,7 +8,6 @@ import { JWTExpired } from "jose/errors"
 
 import { env } from "@/core/env"
 import { jwt } from "@/core/security"
-import { http } from "@/tools/http"
 import { newApp } from "@/core/app"
 
 import {
@@ -20,7 +19,10 @@ import {
   unprocessableEntityError,
 } from "@/core/error"
 
-import { registerSchema } from "./auth.schema"
+import { http } from "@/tools/http"
+import { hashPassword, verifyPassword } from "@/tools/crypto/password"
+
+import { loginSchema, registerSchema } from "./auth.schema"
 
 const app = newApp()
 
@@ -90,6 +92,89 @@ app.post("/register", async ctx => {
       user,
       status: http.StatusText(status),
       message: "User registered successfully.",
+    },
+    status,
+  )
+})
+
+app.post("/login", async ctx => {
+  let input: unknown
+
+  try {
+    input = await ctx.req.json()
+  }
+  catch (error) {
+    if (error instanceof SyntaxError) {
+      return invalidRequestError()
+    }
+
+    SafeErrorLogger.log(error, "failed to parse json request body", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_LOGIN_ERROR",
+      includeStack: true,
+    })
+
+    return internalServerError()
+  }
+
+  const parsed = loginSchema.safeParse(input)
+
+  if (!parsed.success) {
+    return invalidPayloadError(z.treeifyError(parsed.error).properties)
+  }
+
+  let user: UserSchema | undefined
+
+  try {
+    user = await ctx.var.config.models.user.findUserByEmail(parsed.data.email)
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to find user by email failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_LOGIN_ERROR",
+    })
+    return internalServerError()
+  }
+
+  if (user == null) {
+    // Hash password for valid and invalid emails to ensure uniform response time
+    // between requests to help prevent attackers from detecting valid emails.
+    await hashPassword(parsed.data.password)
+    return unauthorizedError("Invalid email or password.")
+  }
+
+  let passwordHash: string
+
+  try {
+    const password = await ctx.var.config.models.user.findPasswordByUserId(user.id)
+
+    if (password == null) {
+      return unauthorizedError("Invalid email or password.")
+    }
+
+    passwordHash = password.hash
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to find password by user id failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_LOGIN_ERROR",
+    })
+    return internalServerError()
+  }
+
+  const isVerified = await verifyPassword(passwordHash, parsed.data.password)
+
+  if (!isVerified) {
+    return unauthorizedError("Invalid email or password.")
+  }
+
+  const status = http.StatusOk
+
+  return ctx.json(
+    {
+      user,
+      status: http.StatusText(status),
+      message: "User logged in successfully.",
     },
     status,
   )

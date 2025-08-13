@@ -2,8 +2,8 @@ import type { DB } from "@/db/connect"
 
 import { eq } from "drizzle-orm"
 
-import { users } from "@/db/schemas"
 import { lowercase } from "@/tools/strings"
+import { passwords, users } from "@/db/schemas"
 
 class UserModel {
   private readonly db: DB
@@ -15,6 +15,12 @@ class UserModel {
   public async findUserByEmail(email: string) {
     return await this.db.query.users.findFirst({
       where: eq(users.email, lowercase(email)),
+    })
+  }
+
+  public async findPasswordByUserId(userId: string) {
+    return await this.db.query.passwords.findFirst({
+      where: eq(passwords.userId, userId),
     })
   }
 
