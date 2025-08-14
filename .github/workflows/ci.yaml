@@ -68,6 +68,7 @@ jobs:
       SNIPPETS_SECRET: testSecret123456789
       RESEND_API_KEY: testResendSecret123456789
       APP_EMAIL_ONBOARDING: onboarding@company.com
+      ALLOW_UNVERIFIED_EMAIL: "true"
 
     steps:
       - name: Checkout
