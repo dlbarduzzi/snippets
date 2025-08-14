@@ -105,6 +105,91 @@ describe("auth apis", () => {
     })
   })
 
+  describe("login", () => {
+    it("post /login should fail with invalid json request", async () => {
+      const res = await testApp.request("/login", {
+        method: "POST",
+        headers: { ...jsonHeaders },
+      })
+      const status = http.StatusBadRequest
+      expect(res.status).toBe(status)
+      expect(await res.json()).toEqual({
+        status: http.StatusText(status),
+        message: "Invalid JSON request.",
+      })
+    })
+
+    it("post /login should fail with invalid json payload", async () => {
+      const res = await testApp.request("/login", {
+        body: JSON.stringify({ email: "", password: "" }),
+        method: "POST",
+        headers: { ...jsonHeaders },
+      })
+      const status = http.StatusBadRequest
+      expect(res.status).toBe(status)
+      expect(await res.json()).toEqual({
+        status: "Bad Request",
+        message: "Invalid JSON payload.",
+        details: {
+          email: {
+            errors: [
+              "Not a valid email",
+              "Email is required",
+            ],
+          },
+          password: {
+            errors: [
+              "Password is required",
+            ],
+          },
+        },
+      })
+    })
+
+    it("post /login should fail with user not found", async () => {
+      const res = await testApp.request("/login", {
+        body: JSON.stringify({ email: "test@xyz.com", password }),
+        method: "POST",
+        headers: { ...jsonHeaders },
+      })
+      const status = http.StatusUnauthorized
+      expect(res.status).toBe(status)
+      expect(await res.json()).toEqual({
+        status: http.StatusText(status),
+        message: "Invalid email or password.",
+      })
+    })
+
+    it("post /login should fail with wrong password", async () => {
+      const res = await testApp.request("/login", {
+        body: JSON.stringify({ email, password: "wrong" }),
+        method: "POST",
+        headers: { ...jsonHeaders },
+      })
+      const status = http.StatusUnauthorized
+      expect(res.status).toBe(status)
+      expect(await res.json()).toEqual({
+        status: http.StatusText(status),
+        message: "Invalid email or password.",
+      })
+    })
+
+    it("post /login should login user successfully", async () => {
+      const res = await testApp.request("/login", {
+        body: JSON.stringify({ email, password }),
+        method: "POST",
+        headers: { ...jsonHeaders },
+      })
+      const status = http.StatusOk
+      expect(res.status).toBe(status)
+      expect(await res.json()).toMatchObject({
+        user: { email },
+        status: http.StatusText(status),
+        message: "User logged in successfully.",
+      })
+    })
+  })
+
   describe("email-verification", () => {
     it("get /email-verification should fail with missing token", async () => {
       const res = await testApp.request("/email-verification", {
