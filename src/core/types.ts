@@ -12,6 +12,7 @@ type AppConfig = {
   mail: {
     sendEmailVerification: (email: string, token: string) => Promise<void>
   }
+  isUnverifiedEmailAllowed: boolean
 }
 
 type AppEnv = {

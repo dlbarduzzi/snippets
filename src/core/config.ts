@@ -1,12 +1,14 @@
 import type { AppConfig } from "./types"
 
 import { db } from "@/db/connect"
-import { logger } from "./logger"
 
 import { AuthModel } from "@/apis/auth.model"
 import { UserModel } from "@/apis/user.model"
 
 import { sendEmailVerification } from "@/mail/email-verification"
+
+import { env } from "./env"
+import { logger } from "./logger"
 
 const APP_NAME = "Snippets"
 
@@ -20,6 +22,7 @@ function newConfig(): AppConfig {
     mail: {
       sendEmailVerification,
     },
+    isUnverifiedEmailAllowed: env.ALLOW_UNVERIFIED_EMAIL,
   }
 }
 

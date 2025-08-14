@@ -31,6 +31,9 @@ const logger = {
   warn: (status: Status, message: string, options?: Options) => {
     baseLogger.warn(message, { status, ...options })
   },
+  warnSimple: (message: string, options?: Options) => {
+    baseLogger.warn(message, { ...options })
+  },
   error: (status: StatusError, message: string, options?: Options) => {
     baseLogger.error(message, { status, ...options })
   },

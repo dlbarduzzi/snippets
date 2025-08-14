@@ -1,9 +1,10 @@
 import type { DB } from "@/db/connect"
+import type { SessionSchema } from "@/db/schemas"
 
 import { eq } from "drizzle-orm"
 
 import { lowercase } from "@/tools/strings"
-import { passwords, users } from "@/db/schemas"
+import { passwords, sessions, users } from "@/db/schemas"
 
 class UserModel {
   private readonly db: DB
@@ -40,11 +41,25 @@ class UserModel {
     })
   }
 
-  public async verifyUserEmail2(email: string) {
-    return await this.db.update(users)
-      .set({ isEmailVerified: true })
-      .where(eq(users.email, lowercase(email)))
-      .returning()
+  public async createSession({
+    token,
+    userId,
+    ipAddress,
+    userAgent,
+    expiresAt,
+  }: Omit<SessionSchema, "id" | "createdAt" | "updatedAt">) {
+    return await this.db.transaction(async tx => {
+      const [session] = await tx
+        .insert(sessions)
+        .values({ token, userId, ipAddress, userAgent, expiresAt })
+        .returning()
+
+      if (session == null) {
+        throw new Error("session cannot be null after inserted into db")
+      }
+
+      return session
+    })
   }
 }
 

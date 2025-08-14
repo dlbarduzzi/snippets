@@ -19,6 +19,7 @@ function newTestConfig(): AppConfig {
         // Mocking sendEmailVerification function for testing.
       },
     },
+    isUnverifiedEmailAllowed: true,
   }
 }
 

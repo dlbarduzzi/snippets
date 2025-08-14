@@ -1,4 +1,4 @@
-import type { UserSchema } from "@/db/schemas"
+import type { SessionSchema, UserSchema } from "@/db/schemas"
 import type { JWTVerifyResult, JWTPayload } from "jose"
 
 import z from "zod"
@@ -7,10 +7,13 @@ import { jwtVerify } from "jose"
 import { JWTExpired } from "jose/errors"
 
 import { env } from "@/core/env"
-import { jwt } from "@/core/security"
 import { newApp } from "@/core/app"
+import { getDate } from "@/core/time"
+import { getIpAddress } from "@/core/request"
+import { generateId, jwt } from "@/core/security"
 
 import {
+  forbiddenError,
   internalServerError,
   invalidPayloadError,
   invalidRequestError,
@@ -149,6 +152,9 @@ app.post("/login", async ctx => {
     const password = await ctx.var.config.models.user.findPasswordByUserId(user.id)
 
     if (password == null) {
+      ctx.var.config.logger.warnSimple("password should exist for found user", {
+        user: { id: user.id, email: user.email },
+      })
       return unauthorizedError("Invalid email or password.")
     }
 
@@ -168,11 +174,41 @@ app.post("/login", async ctx => {
     return unauthorizedError("Invalid email or password.")
   }
 
+  if (!user.isEmailVerified && !ctx.var.config.isUnverifiedEmailAllowed) {
+    return forbiddenError("This email is not verified.")
+  }
+
+  const doNotRememberMe = typeof parsed.data.rememberMe === "boolean"
+    ? !parsed.data.rememberMe
+    : false
+
+  let session: SessionSchema | undefined
+
+  try {
+    session = await ctx.var.config.models.user.createSession({
+      token: generateId(32),
+      userId: user.id,
+      ipAddress: getIpAddress(ctx.req.raw) ?? "",
+      userAgent: ctx.req.header()["user-agent"] ?? "",
+      expiresAt: doNotRememberMe === true
+        ? getDate(60 * 60 * 24 * 1, "sec") // 1 day
+        : getDate(60 * 60 * 24 * 7, "sec"), // 7 days,
+    })
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to create user session failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_LOGIN_ERROR",
+    })
+    return internalServerError()
+  }
+
   const status = http.StatusOk
 
   return ctx.json(
     {
       user,
+      token: session.token,
       status: http.StatusText(status),
       message: "User logged in successfully.",
     },

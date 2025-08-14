@@ -14,6 +14,8 @@ const schema = z.object({
   SNIPPETS_SECRET: z.string().min(12),
   RESEND_API_KEY: z.string().min(1),
   APP_EMAIL_ONBOARDING: z.email(),
+  ALLOW_UNVERIFIED_EMAIL: z.enum(["true", "false"])
+    .transform(value => value === "true"),
 })
 
 // eslint-disable-next-line node/no-process-env

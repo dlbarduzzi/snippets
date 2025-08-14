@@ -60,6 +60,17 @@ function unauthorizedError(message?: string) {
   return newApiError({ message, statusCode, statusText })
 }
 
+function forbiddenError(message?: string) {
+  if (message) {
+    message = toSentence(message.trim())
+  }
+
+  const statusCode = http.StatusForbidden
+  const statusText = http.StatusText(statusCode)
+
+  return newApiError({ message, statusCode, statusText })
+}
+
 function unprocessableEntityError(message?: string) {
   if (message) {
     message = toSentence(message.trim())
@@ -154,6 +165,7 @@ class SafeErrorLogger {
 
 export {
   badRequestError,
+  forbiddenError,
   internalServerError,
   invalidPayloadError,
   invalidRequestError,

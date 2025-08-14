@@ -7,4 +7,5 @@ process.env.DATABASE_URL = "postgresql://test_user:test_pass@localhost:5432/test
 process.env.SNIPPETS_SECRET = "testSnippetsSecret123456789"
 process.env.RESEND_API_KEY = "testResendSecret123456789"
 process.env.APP_EMAIL_ONBOARDING = "onboarding@company.com"
+process.env.ALLOW_UNVERIFIED_EMAIL = "true"
 /* eslint-enable node/no-process-env */
