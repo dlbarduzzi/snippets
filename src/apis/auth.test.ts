@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from "vitest"
 
 import { http } from "@/tools/http"
 import { testApp } from "@/core/test"
+import { cookies } from "@/core/cookie"
 import { generateRandomString, jwt } from "@/core/security"
 
 import { db } from "@/db/connect"
@@ -270,24 +271,25 @@ describe("auth apis", async () => {
     })
 
     it("post /login should login user successfully", async () => {
-      const res = await testApp.request("/login", {
-        body: JSON.stringify({ email, password }),
-        method: "POST",
-        headers: { ...jsonHeaders },
-      })
-
-      const response = await res.json()
-
-      if (res.status === http.StatusUnauthorized) {
-        const status = http.StatusUnauthorized
-        expect(res.status).toBe(status)
-        expect(response).toEqual({
-          status: http.StatusText(status),
-          message: "Invalid email or password.",
+      for (const rememberMe of [true, false, undefined]) {
+        const res = await testApp.request("/login", {
+          body: JSON.stringify({ email, password, rememberMe }),
+          method: "POST",
+          headers: { ...jsonHeaders },
         })
-      }
 
-      if (res.status === http.StatusOk) {
+        const response = await res.json()
+
+        if (res.status === http.StatusUnauthorized) {
+          const status = http.StatusUnauthorized
+          expect(res.status).toBe(status)
+          expect(response).toEqual({
+            status: http.StatusText(status),
+            message: "Invalid email or password.",
+          })
+          return
+        }
+
         const status = http.StatusOk
         expect(res.status).toBe(status)
 
@@ -299,6 +301,28 @@ describe("auth apis", async () => {
 
         expect(response).toHaveProperty("token")
         expect(response.token).toHaveLength(32)
+
+        const setCookieHeaders = res.headers.get("set-cookie")
+
+        const sessionDataName = cookies.sessionData.name
+        const sessionTokenName = cookies.sessionToken.name
+        const doNotRememberName = cookies.doNotRemember.name
+
+        if (rememberMe === true) {
+          expect(setCookieHeaders).include(sessionDataName)
+          expect(setCookieHeaders).include(sessionTokenName)
+        }
+
+        if (rememberMe === false) {
+          expect(setCookieHeaders).include(sessionDataName)
+          expect(setCookieHeaders).include(sessionTokenName)
+          expect(setCookieHeaders).include(doNotRememberName)
+        }
+
+        if (rememberMe === undefined) {
+          expect(setCookieHeaders).include(sessionDataName)
+          expect(setCookieHeaders).include(sessionTokenName)
+        }
       }
     })
   })

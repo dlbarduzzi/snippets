@@ -200,6 +200,7 @@ async function setSessionCookie({ data, headers, doNotRememberMe }: {
 }
 
 export {
+  cookies,
   createCookieName,
   createCookieOptions,
   getSignedCookie,
