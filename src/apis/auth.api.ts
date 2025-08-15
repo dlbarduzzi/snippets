@@ -11,6 +11,7 @@ import { newApp } from "@/core/app"
 import { getDate } from "@/core/time"
 import { getIpAddress } from "@/core/request"
 import { generateId, jwt } from "@/core/security"
+import { setSessionCookie } from "@/core/cookie"
 
 import {
   forbiddenError,
@@ -178,10 +179,6 @@ app.post("/login", async ctx => {
     return forbiddenError("This email is not verified.")
   }
 
-  const doNotRememberMe = typeof parsed.data.rememberMe === "boolean"
-    ? !parsed.data.rememberMe
-    : false
-
   let session: SessionSchema | undefined
 
   try {
@@ -190,7 +187,7 @@ app.post("/login", async ctx => {
       userId: user.id,
       ipAddress: getIpAddress(ctx.req.raw) ?? "",
       userAgent: ctx.req.header()["user-agent"] ?? "",
-      expiresAt: doNotRememberMe === true
+      expiresAt: parsed.data.rememberMe === false
         ? getDate(60 * 60 * 24 * 1, "sec") // 1 day
         : getDate(60 * 60 * 24 * 7, "sec"), // 7 days,
     })
@@ -202,6 +199,16 @@ app.post("/login", async ctx => {
     })
     return internalServerError()
   }
+
+  const doNotRememberMe = typeof parsed.data.rememberMe === "boolean"
+    ? !parsed.data.rememberMe
+    : undefined
+
+  await setSessionCookie({
+    data: { user, session },
+    headers: { get: ctx.req.raw.headers, set: ctx.header },
+    doNotRememberMe,
+  })
 
   const status = http.StatusOk
 

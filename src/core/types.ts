@@ -1,4 +1,5 @@
-import type { Hono } from "hono"
+import type { Hono, Context } from "hono"
+
 import type { Logger } from "./logger"
 import type { UserModel } from "@/apis/user.model"
 import type { AuthModel } from "@/apis/auth.model"
@@ -22,5 +23,7 @@ type AppEnv = {
 }
 
 type App = Hono<AppEnv>
+type AppContext = Context<AppEnv>
+type SetHeaders = AppContext["header"]
 
-export { type App, type AppConfig, type AppEnv }
+export { type App, type AppConfig, type AppEnv, type SetHeaders }
