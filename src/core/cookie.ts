@@ -2,8 +2,11 @@ import type { SetHeaders } from "./types"
 import type { CookieOptions } from "@/tools/http/cookie"
 import type { SessionSchema, UserSchema } from "@/db/schemas"
 
+import { z } from "zod"
+import { sessionSchema, userSchema } from "@/db/schemas"
+
 import { hmac } from "@/tools/crypto/hmac"
-import { encodeBase64url } from "@/tools/crypto/base64"
+import { decodeBase64url, encodeBase64url } from "@/tools/crypto/base64"
 
 import {
   getOneCookie,
@@ -13,6 +16,7 @@ import {
 
 import { env } from "./env"
 import { canonicalJson } from "./json"
+import { strToDateSchema } from "./utils"
 import { createTime, getDate } from "./time"
 
 type SetCookieParams = {
@@ -63,7 +67,7 @@ const cookies = {
   },
 }
 
-export function setCookie({
+function setCookie({
   name,
   value,
   headers,
@@ -151,6 +155,67 @@ async function setCachedCookie(
   })
 }
 
+async function getCachedCookie(secret: string, headers: Headers) {
+  const cookie = headers.get("cookie")
+  if (!cookie) {
+    return null
+  }
+
+  const name = cookies.sessionData.name
+  const result = getOneCookie(name, cookie)
+
+  const cookieValue = result.get(name)
+  if (!cookieValue) {
+    return null
+  }
+
+  let payload: unknown
+  try {
+    payload = JSON.parse(decodeBase64url(cookieValue, "string") as string)
+  }
+  catch {
+    payload = null
+  }
+
+  if (!payload) {
+    return null
+  }
+
+  const schema = z.object({
+    data: z.object({
+      user: userSchema.extend({
+        createdAt: strToDateSchema,
+        updatedAt: strToDateSchema,
+      }),
+      session: sessionSchema.extend({
+        expiresAt: strToDateSchema,
+        createdAt: strToDateSchema,
+        updatedAt: strToDateSchema,
+      }),
+    }),
+    expiresAt: z.number(),
+    signature: z.string(),
+  })
+
+  const parsed = schema.safeParse(payload)
+  if (!parsed.success) {
+    return null
+  }
+
+  const { data, expiresAt, signature } = parsed.data
+
+  const isVerified = await hmac.verify(canonicalJson({
+    ...data,
+    expiresAt,
+  }), secret, signature)
+
+  if (!isVerified) {
+    return null
+  }
+
+  return data
+}
+
 async function setSessionCookie({ data, headers, doNotRememberMe }: {
   data: { user: UserSchema, session: SessionSchema }
   headers: { get: Headers, set: SetHeaders }
@@ -203,6 +268,8 @@ export {
   cookies,
   createCookieName,
   createCookieOptions,
+  getCachedCookie,
   getSignedCookie,
+  setCookie,
   setSessionCookie,
 }

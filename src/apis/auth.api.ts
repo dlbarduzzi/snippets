@@ -11,7 +11,14 @@ import { newApp } from "@/core/app"
 import { getDate } from "@/core/time"
 import { getIpAddress } from "@/core/request"
 import { generateId, jwt } from "@/core/security"
-import { setSessionCookie } from "@/core/cookie"
+
+import {
+  cookies,
+  getCachedCookie,
+  getSignedCookie,
+  setCookie,
+  setSessionCookie,
+} from "@/core/cookie"
 
 import {
   forbiddenError,
@@ -291,6 +298,61 @@ app.get("/email-verification", async ctx => {
       user,
       status: http.StatusText(status),
       message: "Email verified successfully! You can login now.",
+    },
+    status,
+  )
+})
+
+app.get("/session", async ctx => {
+  const sessionTokenCookie = await getSignedCookie(
+    cookies.sessionToken.name,
+    env.SNIPPETS_SECRET,
+    ctx.req.raw.headers,
+  )
+
+  if (sessionTokenCookie == null) {
+    const status = http.StatusUnauthorized
+    return ctx.json(
+      {
+        status: http.StatusText(status),
+        message: "Session not found.",
+        session: null,
+      },
+      status,
+    )
+  }
+
+  const sessionData = await getCachedCookie(env.SNIPPETS_SECRET, ctx.req.raw.headers)
+  if (sessionData) {
+    const isExpired = sessionData.session.expiresAt < new Date()
+    if (!isExpired) {
+      const status = http.StatusOk
+      return ctx.json(
+        {
+          status: http.StatusText(status),
+          message: "Session data found.",
+          user: sessionData.user,
+          session: sessionData.session,
+        },
+        status,
+      )
+    }
+    else {
+      setCookie({
+        name: cookies.sessionData.name,
+        value: "",
+        headers: ctx.header,
+        options: cookies.sessionData.options({ maxAge: 0 }),
+      })
+    }
+  }
+
+  const status = http.StatusOk
+
+  return ctx.json(
+    {
+      status: http.StatusText(status),
+      session: null,
     },
     status,
   )
