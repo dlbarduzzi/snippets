@@ -34,6 +34,7 @@ import { http } from "@/tools/http"
 import { hashPassword, verifyPassword } from "@/tools/crypto/password"
 
 import { loginSchema, registerSchema } from "./auth.schema"
+import { logger } from "@/core/logger"
 
 const app = newApp()
 
@@ -304,35 +305,35 @@ app.get("/email-verification", async ctx => {
 })
 
 app.get("/session", async ctx => {
-  const sessionTokenCookie = await getSignedCookie(
+  const token = await getSignedCookie(
     cookies.sessionToken.name,
     env.SNIPPETS_SECRET,
     ctx.req.raw.headers,
   )
 
-  if (sessionTokenCookie == null) {
+  if (token == null) {
     const status = http.StatusUnauthorized
     return ctx.json(
       {
         status: http.StatusText(status),
-        message: "Session not found.",
+        message: "Session not found! Please login.",
         session: null,
       },
       status,
     )
   }
 
-  const sessionData = await getCachedCookie(env.SNIPPETS_SECRET, ctx.req.raw.headers)
-  if (sessionData) {
-    const isExpired = sessionData.session.expiresAt < new Date()
+  const data = await getCachedCookie(env.SNIPPETS_SECRET, ctx.req.raw.headers)
+
+  if (data) {
+    const isExpired = data.session.expiresAt < new Date()
     if (!isExpired) {
       const status = http.StatusOk
       return ctx.json(
         {
           status: http.StatusText(status),
-          message: "Session data found.",
-          user: sessionData.user,
-          session: sessionData.session,
+          user: data.user,
+          session: data.session,
         },
         status,
       )
@@ -347,11 +348,86 @@ app.get("/session", async ctx => {
     }
   }
 
-  const status = http.StatusOk
+  let user: UserSchema | undefined
+  let session: SessionSchema | undefined
+
+  try {
+    const userSession = await ctx.var.config.models.user.findUserSessionByToken(token)
+    user = userSession.user
+    session = userSession.session
+  }
+  catch (error) {
+    SafeErrorLogger.log(error, "db query to find session by token failed", {
+      logger: ctx.var.config.logger,
+      status: "AUTH_SESSION_ERROR",
+    })
+    return internalServerError()
+  }
+
+  const doNotRememberMe = await getSignedCookie(
+    cookies.doNotRemember.name,
+    env.SNIPPETS_SECRET,
+    ctx.req.raw.headers,
+  )
+
+  if (session == null || session.expiresAt < new Date()) {
+    setCookie({
+      name: cookies.sessionToken.name,
+      value: "",
+      headers: ctx.header,
+      options: cookies.sessionToken.options({ maxAge: 0 }),
+    })
+    setCookie({
+      name: cookies.sessionData.name,
+      value: "",
+      headers: ctx.header,
+      options: cookies.sessionData.options({ maxAge: 0 }),
+    })
+    if (doNotRememberMe != null && doNotRememberMe !== "true") {
+      setCookie({
+        name: cookies.doNotRemember.name,
+        value: "",
+        headers: ctx.header,
+        options: cookies.doNotRemember.options({ maxAge: 0 }),
+      })
+    }
+    if (session == null) {
+      const sessionId = await ctx.var.config.models.user.deleteSessionByToken(token)
+      if (sessionId == null) {
+        logger.warnSimple("failed to delete session by token", { token })
+      }
+    }
+    const status = http.StatusUnauthorized
+    return ctx.json(
+      {
+        status: http.StatusText(status),
+        message: "Session expired! Please login.",
+        session: null,
+      },
+      status,
+    )
+  }
+  // We don't need to update session if the user don't want to be remembered.
+  if (doNotRememberMe !== "true") {
+    const status = http.StatusOk
+    return ctx.json(
+      {
+        status: http.StatusText(status),
+        user,
+        session,
+      },
+      status,
+    )
+  }
+
+  // TODO: Refresh session.
+
+  const status = http.StatusUnauthorized
 
   return ctx.json(
     {
       status: http.StatusText(status),
+      message: "Session not found! Please login.",
       session: null,
     },
     status,

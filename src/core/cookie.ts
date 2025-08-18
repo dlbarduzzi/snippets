@@ -204,6 +204,10 @@ async function getCachedCookie(secret: string, headers: Headers) {
 
   const { data, expiresAt, signature } = parsed.data
 
+  if (expiresAt < Date.now()) {
+    return null
+  }
+
   const isVerified = await hmac.verify(canonicalJson({
     ...data,
     expiresAt,

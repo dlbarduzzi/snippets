@@ -13,6 +13,7 @@ type StatusError =
   | "AUTH_REGISTER_ERROR"
   | "AUTH_EMAIL_VERIFICATION_ERROR"
   | "SEND_EMAIL_VERIFICATION_ERROR"
+  | "AUTH_SESSION_ERROR"
 
 type Options = { [key: string]: unknown }
 

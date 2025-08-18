@@ -61,6 +61,27 @@ class UserModel {
       return session
     })
   }
+
+  public async findUserSessionByToken(token: string) {
+    const result = await this.db.query.sessions.findFirst({
+      where: eq(sessions.token, token),
+      with: { user: true },
+    })
+
+    if (result == null) {
+      return { user: undefined, session: undefined }
+    }
+
+    const { user, ...session } = result
+    return { user, session }
+  }
+
+  public async deleteSessionByToken(token: string) {
+    return await this.db
+      .delete(sessions)
+      .where(eq(sessions.token, token))
+      .returning({ id: sessions.id })
+  }
 }
 
 export { UserModel }
